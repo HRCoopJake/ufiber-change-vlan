@@ -3,6 +3,10 @@
 This is a project takes a mac address, logs into each OLT listed in a database (Which is created with setup.py) and dumps the MAC Table, searches those MAC Tables for the approprate MAC Address, then changes the VLAN to the one specified.
 
 ## Getting Started
+### Dependencies
+    pip install ipaddress
+
+### Setup
 Run setup.py to create the SQLite3 database which is where the IP, Username, and Passwords will be stored for all OLTs. Keep in mind that none of these fields are encrypted
 
 ## Usage
