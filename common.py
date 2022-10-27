@@ -97,12 +97,7 @@ def sql_connection():
     conn = None
 
     try:
-        conn = sqlite3.connect("database.db")
-
-        # Creates and commits the table if it isn't made yet
-        conn.cursor().execute("CREATE TABLE IF NOT EXISTS olts (ip TEXT, username TEXT, password TEXT)")
-        conn.commit()
-        return conn
+        return sqlite3.connect("database.db")
     except Error as e:
         print(e)
 

@@ -5,15 +5,18 @@ import getpass
 
 
 def sql_connection():
-    conn = None
-
+    """Connects to database with name database.db and takes no arguments. 
+    Returns database connection
+    """
     try:
-        conn = sqlite3.connect("database.db")
-        return conn
+        return sqlite3.connect("database.db")
     except Error as e:
         print(e)
 
 def checkForTable(cursor):
+    """Checks if table is created in Database and creates it if it is missing\t
+    Also prints the IP and Username of each entry  
+    """
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='olts'")
     returned = cursor.fetchone()
     if not returned:
