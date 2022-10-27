@@ -25,4 +25,4 @@ for i in args.olts:
         sys.exit()
 
 settings = getONUSettings(baseurl, token, serialNUM)
-disableONU(baseurl, token, serialNUM, settings,144)
+disableONU(baseurl, token, serialNUM, settings,args.vlan)

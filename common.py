@@ -25,10 +25,11 @@ def printHelp():
     print(
         """This program moves a single Ubiquiti ONU to a new VLAN
 
-Usage: python3 main.py -m mac_address [-o OLT...] [-h]
+Usage: python3 main.py -m mac_address -v vlan [-o OLT...] [-h]
     
     Options:
         -m, --mac       (Required) Takes 1 MAC Address e.g. -m ff:ff:ff:ff:ff:ff
+        -v, --vlan      Takes 1 VLAN ID to set as untagged on port 1 of the ONU e.g. -v 255
         -o, --olt       Takes 1 or more comma separated IPs for OLTs
         -h, --help      Prints this menu
         """
@@ -40,10 +41,11 @@ def parseArgs():
 
     usage = """This program moves a single Ubiquiti ONU to a new VLAN
 
-Usage: python3 main.py -m mac_address [-o OLT...] [-h]
+Usage: python3 main.py -m mac_address -v vlan [-o OLT...] [-h]
     
     Options:
         -m, --mac       (Required) Takes 1 MAC Address e.g. -m ff:ff:ff:ff:ff:ff
+        -v, --vlan      Takes 1 VLAN ID to set as untagged on port 1 of the ONU e.g. -v 255
         -o, --olt       Takes 1 or more comma separated IPs for OLTs
         -h, --help      Prints this menu
     """
@@ -55,6 +57,7 @@ Usage: python3 main.py -m mac_address [-o OLT...] [-h]
     
     p.add_argument('-o', '--olt', dest='olts', help='List of OLTs')
     p.add_argument('-m', '--mac', dest='mac', help='MAC Address to look for')
+    p.add_argument('-v', '--vlan', dest='vlan', help='Which VLAN to set as untagged on Ethernet interface')
 
     default_settings = defaultSettings
     args = p.parse_args(namespace=default_settings())
@@ -64,11 +67,29 @@ Usage: python3 main.py -m mac_address [-o OLT...] [-h]
     else:
         printHelp()
     
+    if args.vlan:
+        defaultThings.vlan = args.vlan
+    else:
+        printHelp()
+
     if args.olts:
         olts = args.olts.split(",")
-        defaultThings.olts = olts
+        if len(olts) == 1:
+            oltsCreds = olt(f"('{olts[0]}')")
+        else:
+            oltsCreds = olt(tuple(olts))
+
+        for i in oltsCreds:
+            if i[0] in olts:
+                index = olts.index(i[0])
+                olts.pop(index)
+        if olts:
+            print(f"{olts} aren't in database")
+            sys.exit()
+
+        defaultThings.olts = oltsCreds
     else:
-        defaultThings.olts = olt()
+        defaultThings.olts = olt(False)
     
     return defaultThings
 
@@ -77,7 +98,7 @@ def sql_connection():
 
     try:
         conn = sqlite3.connect("database.db")
-        
+
         # Creates and commits the table if it isn't made yet
         conn.cursor().execute("CREATE TABLE IF NOT EXISTS olts (ip TEXT, username TEXT, password TEXT)")
         conn.commit()
@@ -85,13 +106,19 @@ def sql_connection():
     except Error as e:
         print(e)
 
-def olt():
+def olt(fromTuple):
     connection = sql_connection()
     cursor = connection.cursor()
-    cursor.execute("SELECT * FROM olts")
-    oltList = cursor.fetchall()
-    return oltList
+
+    if not fromTuple:
+        cursor.execute("SELECT * FROM olts")
+        oltList = cursor.fetchall()
+        return oltList
+    else:
+        cursor.execute(f"SELECT * FROM olts WHERE ip IN {fromTuple}")
+        return cursor.fetchall()
 
 class defaultSettings:
     mac = ''
     olts = []
+    vlan = ''
