@@ -5,12 +5,13 @@ This is a project takes a mac address, logs into each OLT listed in a database (
 ## Getting Started
 ### Dependencies
     pip install ipaddress
+    pip install getpass
 
 ### Setup
 Run setup.py to create the SQLite3 database which is where the IP, Username, and Passwords will be stored for all OLTs. Keep in mind that none of these fields are encrypted
 
 ## Usage
-python3 main.py -m mac_address [-o OLT...] [-h]
+python3 main.py -m mac_address -v vlan [-o OLT...] [-h]
     
     Options:
         -m, --mac       (Required) Takes 1 MAC Address e.g. -m ff:ff:ff:ff:ff:ff
